@@ -3,6 +3,8 @@ target/
 *.iml
 mvnw*
 .mvn/
+gmall-generator/
+es-demo/
 
 # Compiled class file
 *.class

@@ -11,6 +11,7 @@ import com.atguigu.gmall.pms.vo.SpuAttrValueVo;
 import com.atguigu.gmall.pms.vo.SpuVo;
 import com.atguigu.gmall.sms.api.GmallSmsApi;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import com.atguigu.gmall.common.bean.PageParamVo;
 
 import com.atguigu.gmall.pms.mapper.SpuMapper;
 import com.atguigu.gmall.pms.service.SpuService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
@@ -76,6 +78,7 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
      * @param spuVo
      */
     @Override
+    @GlobalTransactional
     public void bigSave(SpuVo spuVo) {
         // 一、保存spu相关信息
         // 1.1. 保存spu基本信息
@@ -91,6 +94,9 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
 
         // 二、保存sku相关信息
         saveSku(spuVo, spuId);
+
+        // 最后制造异常
+//        int i = 1 / 0;
     }
 
     /**
@@ -177,7 +183,8 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
      * @param spuVo
      * @param spuId
      */
-    private void saveSpuDesc(SpuVo spuVo, Long spuId) {
+    @Transactional
+    public void saveSpuDesc(SpuVo spuVo, Long spuId) {
         List<String> spuImages = spuVo.getSpuImages();
         SpuDescEntity spuDescEntity = new SpuDescEntity();
         // 注意：spu_info_desc表的主键是spu_id,需要在实体类中配置该主键不是自增主键

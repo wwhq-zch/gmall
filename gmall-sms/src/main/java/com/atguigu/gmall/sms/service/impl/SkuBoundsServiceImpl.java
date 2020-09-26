@@ -20,6 +20,7 @@ import com.atguigu.gmall.common.bean.PageParamVo;
 import com.atguigu.gmall.sms.mapper.SkuBoundsMapper;
 import com.atguigu.gmall.sms.entity.SkuBoundsEntity;
 import com.atguigu.gmall.sms.service.SkuBoundsService;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("skuBoundsService")
@@ -41,13 +42,14 @@ public class SkuBoundsServiceImpl extends ServiceImpl<SkuBoundsMapper, SkuBounds
     }
 
     @Override
+    @Transactional
     public void saveSkuSaleInfo(SkuSaleVo skuSaleVo) {
         // 3.1. 积分优惠
         SkuBoundsEntity skuBoundsEntity = new SkuBoundsEntity();
         BeanUtils.copyProperties(skuSaleVo, skuBoundsEntity);
         // 数据库保存的是整数0-15，页面绑定是0000-1111,用二级制实现
         List<Integer> works = skuSaleVo.getWork();
-        if (!CollectionUtils.isEmpty(works)){
+        if (!CollectionUtils.isEmpty(works) && works.size() == 4){
             skuBoundsEntity.setWork(works.get(0) * 8 + works.get(1) * 4 + works.get(2) * 2 + works.get(3));
         }
         this.save(skuBoundsEntity);
