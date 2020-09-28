@@ -27,3 +27,7 @@ spring:
           uri: lb://sms-service
           predicates:
             - Path=/sms/**
+        - id: search-route # 搜索管理路由
+          uri: lb://search-service
+          predicates:
+            - Path=/search/**

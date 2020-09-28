@@ -35,6 +35,14 @@ public class SpuController {
     @Autowired
     private SpuService spuService;
 
+    @ApiOperation("分页查询已上架spu信息")
+    @PostMapping("json")
+    public ResponseVo<List<SpuEntity>> querySpuByPageJson(@RequestBody PageParamVo paramVo){
+        PageResultVo pageResultVo = this.spuService.queryPage(paramVo);
+        return ResponseVo.ok( (List<SpuEntity>) pageResultVo.getList() );
+    }
+
+
     // 根据前后台文档或者需要接受、传递的信息判断后端接口的实现方式
     @ApiOperation("spu商品信息查询")
     @GetMapping("category/{categoryId}")
