@@ -6,6 +6,9 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * 搜索响应数据模型
+ */
 @Data
 public class SearchResponseVo {
 

@@ -1,5 +1,6 @@
 package com.atguigu.gmall.pms.service.impl;
 
+import com.atguigu.gmall.common.handler.GmallException;
 import com.atguigu.gmall.pms.entity.*;
 import com.atguigu.gmall.pms.mapper.SkuMapper;
 import com.atguigu.gmall.pms.mapper.SpuDescMapper;
@@ -13,6 +14,7 @@ import com.atguigu.gmall.sms.api.GmallSmsApi;
 import com.atguigu.gmall.sms.vo.SkuSaleVo;
 import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,6 +48,9 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
     private SkuImagesService skuImagesService;
     @Autowired
     private GmallSmsApi gmallSmsApi;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
 
     @Override
     public PageResultVo queryPage(PageParamVo paramVo) {
@@ -95,8 +100,20 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
         // 二、保存sku相关信息
         saveSku(spuVo, spuId);
 
+        // 发送消息，同步mysql数据库与es中的数据
+        sendMessage(spuId, "insert");
+
         // 最后制造异常
 //        int i = 1 / 0;
+    }
+
+    private void sendMessage(Long id, String type){
+        // 发送消息
+        try {
+            this.rabbitTemplate.convertAndSend("PMS_ITEM_EXCHANGE", "item." + type, id);
+        } catch (Exception e) {
+            throw new GmallException( type + "商品消息发送异常，商品id：" +  id);
+        }
     }
 
     /**

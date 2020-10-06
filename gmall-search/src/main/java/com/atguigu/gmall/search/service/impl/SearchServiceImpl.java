@@ -21,7 +21,6 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.nested.ParsedNested;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedLongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
@@ -89,8 +88,10 @@ public class SearchServiceImpl implements SearchService {
                 Map<String, HighlightField> highlightFields = hitHit.getHighlightFields();
 
                 HighlightField highlightField = highlightFields.get("title");
-                Text[] fragments = highlightField.getFragments();
-                goods.setTitle(fragments[0].string());
+                if(highlightField != null){
+                    Text[] fragments = highlightField.getFragments();
+                    goods.setTitle(fragments[0].string());
+                }
 
                 return goods;
             } catch (JsonProcessingException e) {
@@ -102,83 +103,88 @@ public class SearchServiceImpl implements SearchService {
         responseVo.setGoodsList(goodsList);
 
         // 二、获取所有聚合结果集
-        Map<String, Aggregation> aggregationMap = searchResponse.getAggregations().asMap();
-
-        // 2.1解析品牌聚合获取品牌过滤信息
-        ParsedLongTerms brandIdAgg = (ParsedLongTerms)aggregationMap.get("brandIdAgg");
-        List<? extends Terms.Bucket> brandIdBuckets = brandIdAgg.getBuckets();
-        if (!CollectionUtils.isEmpty(brandIdBuckets)){
-            // 需要把桶集合转化成品牌集合
-            List<BrandEntity> brands = brandIdBuckets.stream().map(bucket -> {
-                BrandEntity brandEntity = new BrandEntity();
-                brandEntity.setId(((Terms.Bucket) bucket).getKeyAsNumber().longValue());
-
-                // 解析子聚合获取品牌名称和logo
-                Map<String, Aggregation> subAggregationMap = ((Terms.Bucket) bucket).getAggregations().asMap();
-                // 解析品牌名称
-                ParsedStringTerms brandNameAgg = (ParsedStringTerms) subAggregationMap.get("brandNameAgg");
-                List<? extends Terms.Bucket> nameAggBuckets = brandNameAgg.getBuckets();
-                if (!CollectionUtils.isEmpty(nameAggBuckets)) {
-                    brandEntity.setName(nameAggBuckets.get(0).getKeyAsString());
-                }
-
-                // 解析品牌logo
-                ParsedStringTerms logoAgg = (ParsedStringTerms) subAggregationMap.get("logoAgg");
-                List<? extends Terms.Bucket> logoAggBuckets = logoAgg.getBuckets();
-                if (!CollectionUtils.isEmpty(logoAggBuckets)) {
-                    brandEntity.setLogo(logoAggBuckets.get(0).getKeyAsString());
-                }
-
-                return brandEntity;
-            }).collect(Collectors.toList());
-
-            responseVo.setBrands(brands);
+        Map<String, Aggregation> aggregationMap = null;
+        if (searchResponse.getAggregations() != null){
+            aggregationMap = searchResponse.getAggregations().asMap();
         }
 
-        // 2.2解析分类的聚合结果集获取分类
-        ParsedLongTerms categoryIdAgg = (ParsedLongTerms) aggregationMap.get("categoryIdAgg");
-        List<? extends Terms.Bucket> categoryIdBuckets = categoryIdAgg.getBuckets();
-        if (!CollectionUtils.isEmpty(categoryIdBuckets)){
-            List<CategoryEntity> categories = categoryIdBuckets.stream().map(bucket -> {
-                CategoryEntity categoryEntity = new CategoryEntity();
-                categoryEntity.setId(((Terms.Bucket) bucket).getKeyAsNumber().longValue());
+        if (!CollectionUtils.isEmpty(aggregationMap)){
+            // 2.1解析品牌聚合获取品牌过滤信息
+            ParsedLongTerms brandIdAgg = (ParsedLongTerms)aggregationMap.get("brandIdAgg");
+            List<? extends Terms.Bucket> brandIdBuckets = brandIdAgg.getBuckets();
+            if (!CollectionUtils.isEmpty(brandIdBuckets)){
+                // 需要把桶集合转化成品牌集合
+                List<BrandEntity> brands = brandIdBuckets.stream().map(bucket -> {
+                    BrandEntity brandEntity = new BrandEntity();
+                    brandEntity.setId(((Terms.Bucket) bucket).getKeyAsNumber().longValue());
 
-                ParsedStringTerms categoryNameAgg = (ParsedStringTerms) ((Terms.Bucket) bucket).getAggregations().get("categoryNameAgg");
-                List<? extends Terms.Bucket> nameAggBuckets = categoryNameAgg.getBuckets();
-                if (!CollectionUtils.isEmpty(nameAggBuckets)) {
-                    categoryEntity.setName(nameAggBuckets.get(0).getKeyAsString());
-                }
-                return categoryEntity;
-            }).collect(Collectors.toList());
+                    // 解析子聚合获取品牌名称和logo
+                    Map<String, Aggregation> subAggregationMap = ((Terms.Bucket) bucket).getAggregations().asMap();
+                    // 解析品牌名称
+                    ParsedStringTerms brandNameAgg = (ParsedStringTerms) subAggregationMap.get("brandNameAgg");
+                    List<? extends Terms.Bucket> nameAggBuckets = brandNameAgg.getBuckets();
+                    if (!CollectionUtils.isEmpty(nameAggBuckets)) {
+                        brandEntity.setName(nameAggBuckets.get(0).getKeyAsString());
+                    }
 
-            responseVo.setCategories(categories);
-        }
+                    // 解析品牌logo
+                    ParsedStringTerms logoAgg = (ParsedStringTerms) subAggregationMap.get("logoAgg");
+                    List<? extends Terms.Bucket> logoAggBuckets = logoAgg.getBuckets();
+                    if (!CollectionUtils.isEmpty(logoAggBuckets)) {
+                        brandEntity.setLogo(logoAggBuckets.get(0).getKeyAsString());
+                    }
 
-        // 2.3获取规格参数的聚合结果集，解析出规格参数
-        ParsedNested attrAgg = (ParsedNested) aggregationMap.get("attrAgg");
-        ParsedLongTerms attrIdAgg = (ParsedLongTerms) attrAgg.getAggregations().get("attrIdAgg");
-        List<? extends Terms.Bucket> attrIdBuckets = attrIdAgg.getBuckets();
-        if (!CollectionUtils.isEmpty(attrIdBuckets)){
-            List<SearchResponseAttrValueVo> filters = attrIdBuckets.stream().map(bucket -> {
-                SearchResponseAttrValueVo attrValueVo = new SearchResponseAttrValueVo();
-                attrValueVo.setAttrId(((Terms.Bucket) bucket).getKeyAsNumber().longValue());
-                // 获取每个规格参数id聚合下的子聚合
-                Map<String, Aggregation> subAggregationMap = ((Terms.Bucket) bucket).getAggregations().asMap();
-                ParsedStringTerms attrNameAgg = (ParsedStringTerms) subAggregationMap.get("attrNameAgg");
-                List<? extends Terms.Bucket> attrNameBuckets = attrNameAgg.getBuckets();
-                if (!CollectionUtils.isEmpty(attrNameBuckets)) {
-                    attrValueVo.setAttrName(attrNameBuckets.get(0).getKeyAsString());
-                }
-                // 解析规格参数值
-                ParsedStringTerms attrValueAgg = (ParsedStringTerms) subAggregationMap.get("attrValueAgg");
-                List<? extends Terms.Bucket> attrValueBuckets = attrValueAgg.getBuckets();
-                if (!CollectionUtils.isEmpty(attrValueBuckets)){
-                    attrValueVo.setAttrValues(attrValueBuckets.stream().map(Terms.Bucket::getKeyAsString).collect(Collectors.toList()));
-                }
-                return attrValueVo;
-            }).collect(Collectors.toList());
+                    return brandEntity;
+                }).collect(Collectors.toList());
 
-            responseVo.setFilters(filters);
+                responseVo.setBrands(brands);
+            }
+
+            // 2.2解析分类的聚合结果集获取分类
+            ParsedLongTerms categoryIdAgg = (ParsedLongTerms) aggregationMap.get("categoryIdAgg");
+            List<? extends Terms.Bucket> categoryIdBuckets = categoryIdAgg.getBuckets();
+            if (!CollectionUtils.isEmpty(categoryIdBuckets)){
+                List<CategoryEntity> categories = categoryIdBuckets.stream().map(bucket -> {
+                    CategoryEntity categoryEntity = new CategoryEntity();
+                    categoryEntity.setId(((Terms.Bucket) bucket).getKeyAsNumber().longValue());
+
+                    ParsedStringTerms categoryNameAgg = (ParsedStringTerms) ((Terms.Bucket) bucket).getAggregations().get("categoryNameAgg");
+                    List<? extends Terms.Bucket> nameAggBuckets = categoryNameAgg.getBuckets();
+                    if (!CollectionUtils.isEmpty(nameAggBuckets)) {
+                        categoryEntity.setName(nameAggBuckets.get(0).getKeyAsString());
+                    }
+                    return categoryEntity;
+                }).collect(Collectors.toList());
+
+                responseVo.setCategories(categories);
+            }
+
+            // 2.3获取规格参数的聚合结果集，解析出规格参数
+            ParsedNested attrAgg = (ParsedNested) aggregationMap.get("attrAgg");
+            ParsedLongTerms attrIdAgg = (ParsedLongTerms) attrAgg.getAggregations().get("attrIdAgg");
+            List<? extends Terms.Bucket> attrIdBuckets = attrIdAgg.getBuckets();
+            if (!CollectionUtils.isEmpty(attrIdBuckets)){
+                List<SearchResponseAttrValueVo> filters = attrIdBuckets.stream().map(bucket -> {
+                    SearchResponseAttrValueVo attrValueVo = new SearchResponseAttrValueVo();
+                    attrValueVo.setAttrId(((Terms.Bucket) bucket).getKeyAsNumber().longValue());
+                    // 获取每个规格参数id聚合下的子聚合
+                    Map<String, Aggregation> subAggregationMap = ((Terms.Bucket) bucket).getAggregations().asMap();
+                    ParsedStringTerms attrNameAgg = (ParsedStringTerms) subAggregationMap.get("attrNameAgg");
+                    List<? extends Terms.Bucket> attrNameBuckets = attrNameAgg.getBuckets();
+                    if (!CollectionUtils.isEmpty(attrNameBuckets)) {
+                        attrValueVo.setAttrName(attrNameBuckets.get(0).getKeyAsString());
+                    }
+                    // 解析规格参数值
+                    ParsedStringTerms attrValueAgg = (ParsedStringTerms) subAggregationMap.get("attrValueAgg");
+                    List<? extends Terms.Bucket> attrValueBuckets = attrValueAgg.getBuckets();
+                    if (!CollectionUtils.isEmpty(attrValueBuckets)){
+                        attrValueVo.setAttrValues(attrValueBuckets.stream().map(Terms.Bucket::getKeyAsString).collect(Collectors.toList()));
+                    }
+                    return attrValueVo;
+                }).collect(Collectors.toList());
+
+                responseVo.setFilters(filters);
+            }
         }
 
         return responseVo;
@@ -252,23 +258,26 @@ public class SearchServiceImpl implements SearchService {
 
         // 2. 构建排序条件：1-价格升序 2-价格降序 3-新品降序 4-销量降序
         Integer sort = paramVo.getSort();
-        switch (sort){
-            case 1:
-                sourceBuilder.sort("price", SortOrder.ASC);
-                break;
-            case 2:
-                sourceBuilder.sort("price", SortOrder.DESC);
-                break;
-            case 3:
-                sourceBuilder.sort("createTime", SortOrder.DESC);
-                break;
-            case 4:
-                sourceBuilder.sort("sales", SortOrder.DESC);
-                break;
-            default:
-                sourceBuilder.sort("score", SortOrder.DESC);
-                break;
+        if (sort != null){
+            switch (sort){
+                case 1:
+                    sourceBuilder.sort("price", SortOrder.DESC);
+                    break;
+                case 2:
+                    sourceBuilder.sort("price", SortOrder.ASC);
+                    break;
+                case 3:
+                    sourceBuilder.sort("createTime", SortOrder.DESC);
+                    break;
+                case 4:
+                    sourceBuilder.sort("sales", SortOrder.DESC);
+                    break;
+                default:
+                    sourceBuilder.sort("score", SortOrder.DESC);
+                    break;
+            }
         }
+
 
         // 3. 构建分页条件
         Integer pageNum = paramVo.getPageNum();
