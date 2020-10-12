@@ -22,6 +22,11 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, CategoryEnt
     private CategoryMapper categoryMapper;
 
     @Override
+    public List<CategoryEntity> queryCategoriesWithSub(Long pid) {
+        return this.categoryMapper.queryCategoriesByPid(pid);
+    }
+
+    @Override
     public PageResultVo queryPage(PageParamVo paramVo) {
         IPage<CategoryEntity> page = this.page(
                 paramVo.getPage(),

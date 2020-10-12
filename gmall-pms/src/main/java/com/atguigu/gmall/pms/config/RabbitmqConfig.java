@@ -37,6 +37,9 @@ public class RabbitmqConfig {
 
     }
 
+    /**
+     * 延时队列和死信队列
+     */
 //    @Bean
 //    public TopicExchange delayExchange(){
 //        return ExchangeBuilder.topicExchange("SPRING_DELAY_EXCHANGE").build();

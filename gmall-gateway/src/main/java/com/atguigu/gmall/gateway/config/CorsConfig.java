@@ -6,6 +6,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+/**
+ * 使用网关工程配置类，解决跨域问题
+ */
 @Configuration
 public class CorsConfig {
 
@@ -15,8 +18,10 @@ public class CorsConfig {
         // 初始化CORS配置对象
         CorsConfiguration config = new CorsConfiguration();
         // 允许的域,不要写*，否则cookie就无法使用了
-        config.addAllowedOrigin("http://manager.gmall.com");
+        config.addAllowedOrigin("http://manager.gmall.com"); // 通过更改window系统hosts文件本地伪装域名
         config.addAllowedOrigin("http://www.gmall.com");
+        config.addAllowedOrigin("http://gmall.com");
+        config.addAllowedOrigin("http://index.gmall.com");
         // 允许的头信息
         config.addAllowedHeader("*");
         // 允许的请求方式

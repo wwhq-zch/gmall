@@ -1,10 +1,12 @@
 package com.atguigu.gmall.pms.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 商品三级分类
@@ -47,5 +49,11 @@ public class CategoryEntity implements Serializable {
 	 * 计量单位
 	 */
 	private String unit;
+
+	/**
+	 * 二三级分类集合
+	 */
+	@TableField(exist = false) // 声明该字段在数据库并不存在
+	private List<CategoryEntity> subs;
 
 }
