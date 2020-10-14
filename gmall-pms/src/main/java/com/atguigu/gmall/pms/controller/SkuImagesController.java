@@ -5,6 +5,7 @@ import com.atguigu.gmall.common.bean.PageResultVo;
 import com.atguigu.gmall.common.bean.ResponseVo;
 import com.atguigu.gmall.pms.entity.SkuImagesEntity;
 import com.atguigu.gmall.pms.service.SkuImagesService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,13 @@ public class SkuImagesController {
 
     @Autowired
     private SkuImagesService skuImagesService;
+
+    @ApiOperation("根据skuId查询sku的图片")
+    @GetMapping("sku/{skuId}")
+    public ResponseVo<List<SkuImagesEntity>> queryImagesBySkuId(@PathVariable("skuId") Long skuId){
+        List<SkuImagesEntity> skuImagesEntities = this.skuImagesService.list(new QueryWrapper<SkuImagesEntity>().eq("sku_id", skuId));
+        return ResponseVo.ok(skuImagesEntities);
+    }
 
     /**
      * 列表

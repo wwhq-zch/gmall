@@ -6,6 +6,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,8 @@ public class GmallCacheAspect {
     private StringRedisTemplate redisTemplate;
     @Autowired
     private RedissonClient redissonClient;
+    @Autowired
+    private RBloomFilter rBloomFilter;
 
     /**
      * joinPoint.getArgs(); 获取方法参数
@@ -39,6 +42,14 @@ public class GmallCacheAspect {
      */
     @Around("@annotation(com.atguigu.gmall.index.config.GmallCache)") // 切入点表达式 execution(* com.atguigu.spring.aspectj.UserDao.delete(..)
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable{// 使用JoinPoint接口或其子接口ProceedingJoinPoint拦截方法，获取链接点信息
+        // 使用布隆过滤器解决缓存穿透问题
+        // 获取方法的参数
+        List<Object> args = Arrays.asList(joinPoint.getArgs()); // [args...]
+        String pid = args.get(0).toString();
+        if (!this.rBloomFilter.contains(pid)){
+            return null;
+        }
+
         // 获取切点方法的签名
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         // 获取方法对象
@@ -50,10 +61,8 @@ public class GmallCacheAspect {
         int timeout = annotation.timeout();
         int random = annotation.Random();
         String lock = annotation.lock();
-        // 获取方法的参数
-        Object[] args = joinPoint.getArgs(); // [args...]
-        String param = Arrays.asList(args).toString();
-        String key = prefix + param; // 拼接缓存key
+        // 拼接缓存key
+        String key = prefix + pid;
         // 获取方法的返回值类型
         Class<?> returnType = method.getReturnType();
 
@@ -65,7 +74,7 @@ public class GmallCacheAspect {
             return JSON.parseObject(json, returnType);
         }
         // 没有，加分布式锁
-        RLock rLock = this.redissonClient.getLock(lock + param);
+        RLock rLock = this.redissonClient.getLock(lock + pid);
         rLock.lock();
         Object result = null;
         try {
@@ -79,7 +88,6 @@ public class GmallCacheAspect {
             result = joinPoint.proceed(joinPoint.getArgs());
 
             // 拦截后代码块：放入缓存 释放分布锁
-            // TODO 使用布隆过滤器解决缓存穿透问题
             this.redisTemplate.opsForValue().set(key,JSON.toJSONString(result), timeout + new Random().nextInt(random), TimeUnit.MINUTES);
 
         } catch (Throwable throwable) {

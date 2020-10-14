@@ -40,7 +40,11 @@ spring:
           uri: lb://index-service
           predicates:
             - Path=/index/**
-        - id: item-route # 搜索商品详情页路由
+        - id: item-route # 商品详情页路由
           uri: lb://item-service
           predicates:
             - Path=/item/**
+        - id: item-route2 # 商品详情页路由
+          uri: lb://item-service
+          predicates:
+            - Host=item.gmall.com

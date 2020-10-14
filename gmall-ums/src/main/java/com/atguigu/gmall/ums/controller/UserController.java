@@ -34,6 +34,16 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+
+
+
+    @ApiOperation("校验数据(手机，用户名，邮箱)是否可用")
+    @GetMapping("check/{data}/{type}")
+    public ResponseVo<Boolean> checkData(@PathVariable("data") String data, @PathVariable("type") Integer type){
+        Boolean b = this.userService.checkData(data, type);
+        return ResponseVo.ok(b);
+    }
+
     /**
      * 列表
      */
