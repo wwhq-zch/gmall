@@ -5,8 +5,6 @@ import com.atguigu.gmall.common.bean.PageResultVo;
 import com.atguigu.gmall.common.bean.PageParamVo;
 import com.atguigu.gmall.ums.entity.UserStatisticsEntity;
 
-import java.util.Map;
-
 /**
  * 统计信息表
  *

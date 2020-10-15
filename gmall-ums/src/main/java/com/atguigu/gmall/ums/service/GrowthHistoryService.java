@@ -5,8 +5,6 @@ import com.atguigu.gmall.common.bean.PageResultVo;
 import com.atguigu.gmall.common.bean.PageParamVo;
 import com.atguigu.gmall.ums.entity.GrowthHistoryEntity;
 
-import java.util.Map;
-
 /**
  * 成长积分记录表
  *

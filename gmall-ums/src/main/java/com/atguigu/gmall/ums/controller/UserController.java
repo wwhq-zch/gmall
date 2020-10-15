@@ -34,8 +34,21 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @ApiOperation("查询用户")
+    @GetMapping("query")
+    public ResponseVo<UserEntity> queryUser(
+            @RequestParam("data")String data,
+            @RequestParam("password")String password){
+        UserEntity userEntity = this.userService.queryUser(data, password);
+        return ResponseVo.ok(userEntity);
+    }
 
-
+    @ApiOperation("注册")
+    @PostMapping("register")
+    public ResponseVo<Object> register(UserEntity userEntity, @RequestParam("code") String code){
+        this.userService.register(userEntity, code);
+        return ResponseVo.ok(null);
+    }
 
     @ApiOperation("校验数据(手机，用户名，邮箱)是否可用")
     @GetMapping("check/{data}/{type}")

@@ -6,6 +6,8 @@ spring:
       discovery:
         server-addr: 127.0.0.1:8848
     gateway:
+      x-forwarded:
+        host-enabled: true # 默认开启
       routes:
         - id: pms-route # 商品管理路由
           uri: lb://pms-service
@@ -36,6 +38,9 @@ spring:
           predicates:
             - Host=www.gmall.com, index.gmall.com, gmall.com
             # - Path=/index/**  如果写在一个里面，他们的关系是and关系
+          filters:
+            - AddResponseHeader=xxx,yyy,zzz
+            - Auth=/
         - id: index-route2 # 首页的异步请求路由
           uri: lb://index-service
           predicates:
@@ -48,3 +53,19 @@ spring:
           uri: lb://item-service
           predicates:
             - Host=item.gmall.com
+        - id: auth-route # 授权中心(单点登录)路由
+          uri: lb://auth-service
+          predicates:
+            - Host=sso.gmall.com
+          filters:
+            #过滤器名称就是`Auth`，即自定义过滤器工厂`类名称` 去掉 `GatewayFilterFactory`
+            - Auth=/xxx
+        - id: cart-route2 # 购物车路由
+          uri: lb://cart-service
+          predicates:
+            - Host=cart.gmall.com
+
+auth:
+  jwt:
+    pubKeyPath: D:\\test\\project\\rsa.pub # 公钥地址
+    cookieName: GMALL-TOKEN
