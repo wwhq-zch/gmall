@@ -40,7 +40,7 @@ spring:
             # - Path=/index/**  如果写在一个里面，他们的关系是and关系
           filters:
             - AddResponseHeader=xxx,yyy,zzz
-            - Auth=/
+#            - Auth=/
         - id: index-route2 # 首页的异步请求路由
           uri: lb://index-service
           predicates:

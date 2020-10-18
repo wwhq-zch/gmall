@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @Api(description = "商品详情 管理")
 //@RestController
 @Controller
-@RequestMapping("item")
+@RequestMapping
 public class ItemController {
 
     @Autowired

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.util.List;
 
 @Api(description = "商城首页 系统")
-@Controller()
+@Controller
 public class IndexController {
 
     @Autowired
