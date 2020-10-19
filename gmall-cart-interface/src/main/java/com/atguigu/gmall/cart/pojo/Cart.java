@@ -22,11 +22,11 @@ public class Cart {
     private String defaultImage;
     private String title;
     @TableField("sale_attrs")
-    private String saleAttrs; // 销售属性：List<SkuAttrValueEntity>的json格式
+    private String saleAttrs; // 销售属性：List<SkuAttrValueEntity>的json格式 方便存储到数据库中
     private BigDecimal price; // 加入购物车时的价格
     @TableField(exist = false) //声明该字段在mysql数据库不存在
     private BigDecimal currentPrice; // 实时价格，用于比价
     private BigDecimal count;
     private Boolean store = false; // 是否有货
-    private String sales; // 营销信息: List<ItemSaleVo>的json格式
+    private String sales; // 营销信息: List<ItemSaleVo>的json格式 方便存储到数据库中
 }

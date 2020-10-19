@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CartAsyncService {
 
-    @Autowired
+    @Autowired(required = false)
     private CartMapper cartMapper;
 
     /**
@@ -34,6 +34,7 @@ public class CartAsyncService {
      */
     @Async
     public void saveCart(String userId, Cart cart){
+//        int i = 1 / 0;
         this.cartMapper.insert(cart);
     }
 
