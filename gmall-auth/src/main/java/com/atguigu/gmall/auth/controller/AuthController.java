@@ -32,7 +32,7 @@ public class AuthController {
     public String login(
             @RequestParam("loginName")String loginName,
             @RequestParam("password")String password,
-            @RequestParam("returnUrl")String returnUrl,
+            @RequestParam(value = "returnUrl", required = false)String returnUrl,
             HttpServletRequest request, HttpServletResponse response){
         this.authService.accredit(loginName, password, request, response);
         // 登录成功重定向到登录前页面

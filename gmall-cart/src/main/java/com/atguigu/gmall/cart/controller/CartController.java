@@ -2,6 +2,7 @@ package com.atguigu.gmall.cart.controller;
 
 import com.atguigu.gmall.cart.interceptor.LoginInterceptor;
 import com.atguigu.gmall.cart.pojo.Cart;
+import com.atguigu.gmall.cart.pojo.CartStatus;
 import com.atguigu.gmall.cart.pojo.UserInfo;
 import com.atguigu.gmall.cart.service.CartService;
 import com.atguigu.gmall.common.bean.ResponseVo;
@@ -25,6 +26,14 @@ public class CartController {
 
     @Autowired
     private CartService cartService;
+
+    @ApiOperation("获取登录用户勾选的购物车")
+    @ResponseBody
+    @GetMapping("check/{userId}")
+    public ResponseVo<List<Cart>> queryCheckedCarts(@PathVariable("userId")Long userId){
+        List<Cart> carts = this.cartService.queryCheckedCarts(userId);
+        return ResponseVo.ok(carts);
+    }
 
     @ApiOperation("添加购物车成功，重定向到购物车成功页")
     @GetMapping
@@ -51,6 +60,14 @@ public class CartController {
         List<Cart> carts = this.cartService.queryCarts();
         model.addAttribute("carts", carts);
         return "cart";
+    }
+
+    @ApiOperation("修改购物车商品选中状态")
+    @ResponseBody
+    @PostMapping("updateStatus")
+    public ResponseVo<Object> updateStatus(@RequestBody CartStatus cartStatus){
+        this.cartService.updateStatus(cartStatus);
+        return ResponseVo.ok();
     }
 
     @ApiOperation("修改购物车商品数量")

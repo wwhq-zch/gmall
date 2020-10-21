@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,83 +42,95 @@ public class GoodsListener {
                     key = {"item.insert"}
             )
     )
-    public void listener(Long spuId, Channel channel, Message message) {
-        // 查询出spu下所有的sku集合
-        ResponseVo<List<SkuEntity>> skusResponseVo = this.pmsClient.querySkusBySpuId(spuId);
-        List<SkuEntity> skuEntities = skusResponseVo.getData();
-        if (!CollectionUtils.isEmpty(skuEntities)) {
-            // 转化成goods集合
-            List<Goods> goodsList = skuEntities.stream().map(skuEntity -> {
-                Goods goods = new Goods();
+    public void listener(Long spuId, Channel channel, Message message) throws IOException {
+        try {
+            // 查询出spu下所有的sku集合
+            ResponseVo<List<SkuEntity>> skusResponseVo = this.pmsClient.querySkusBySpuId(spuId);
+            List<SkuEntity> skuEntities = skusResponseVo.getData();
+            if (!CollectionUtils.isEmpty(skuEntities)) {
+                // 转化成goods集合
+                List<Goods> goodsList = skuEntities.stream().map(skuEntity -> {
+                    Goods goods = new Goods();
 
-                // sku相关信息
-                goods.setSkuId(skuEntity.getId());
-                goods.setTitle(skuEntity.getTitle());
-                goods.setSubTitle(skuEntity.getSubtitle());
-                goods.setDefaultImage(skuEntity.getDefaultImage());
-                goods.setPrice(skuEntity.getPrice().doubleValue());
+                    // sku相关信息
+                    goods.setSkuId(skuEntity.getId());
+                    goods.setTitle(skuEntity.getTitle());
+                    goods.setSubTitle(skuEntity.getSubtitle());
+                    goods.setDefaultImage(skuEntity.getDefaultImage());
+                    goods.setPrice(skuEntity.getPrice().doubleValue());
 
-                // 品牌相关信息
-                ResponseVo<BrandEntity> brandEntityResponseVo = this.pmsClient.queryBrandById(skuEntity.getBrandId());
-                BrandEntity brandEntity = brandEntityResponseVo.getData();
-                if (brandEntity != null) {
-                    goods.setBrandId(brandEntity.getId());
-                    goods.setBrandName(brandEntity.getName());
-                    goods.setLogo(brandEntity.getLogo());
-                }
+                    // 品牌相关信息
+                    ResponseVo<BrandEntity> brandEntityResponseVo = this.pmsClient.queryBrandById(skuEntity.getBrandId());
+                    BrandEntity brandEntity = brandEntityResponseVo.getData();
+                    if (brandEntity != null) {
+                        goods.setBrandId(brandEntity.getId());
+                        goods.setBrandName(brandEntity.getName());
+                        goods.setLogo(brandEntity.getLogo());
+                    }
 
-                // 分类相关信息
-                ResponseVo<CategoryEntity> categoryEntityResponseVo = this.pmsClient.queryCategoryById(skuEntity.getCatagoryId());
-                CategoryEntity categoryEntity = categoryEntityResponseVo.getData();
-                if (categoryEntity != null) {
-                    goods.setCategoryId(categoryEntity.getId());
-                    goods.setCategoryName(categoryEntity.getName());
-                }
+                    // 分类相关信息
+                    ResponseVo<CategoryEntity> categoryEntityResponseVo = this.pmsClient.queryCategoryById(skuEntity.getCatagoryId());
+                    CategoryEntity categoryEntity = categoryEntityResponseVo.getData();
+                    if (categoryEntity != null) {
+                        goods.setCategoryId(categoryEntity.getId());
+                        goods.setCategoryName(categoryEntity.getName());
+                    }
 
-                // spu相关信息
-                ResponseVo<SpuEntity> spuEntityResponseVo = this.pmsClient.querySpuById(spuId);
-                SpuEntity spuEntity = spuEntityResponseVo.getData();
-                if ( spuEntity != null){
-                    goods.setCreateTime(spuEntity.getCreateTime());
-                }
+                    // spu相关信息
+                    ResponseVo<SpuEntity> spuEntityResponseVo = this.pmsClient.querySpuById(spuId);
+                    SpuEntity spuEntity = spuEntityResponseVo.getData();
+                    if ( spuEntity != null){
+                        goods.setCreateTime(spuEntity.getCreateTime());
+                    }
 
-                // 库存相关信息
-                ResponseVo<List<WareSkuEntity>> wareSkusResponseVo = this.wmsClient.queryWareSkuBySkuId(skuEntity.getId());
-                List<WareSkuEntity> wareSkuEntities = wareSkusResponseVo.getData();
-                if (!CollectionUtils.isEmpty(wareSkuEntities)) {
-                    goods.setStore(wareSkuEntities.stream().anyMatch(wareSkuEntity -> wareSkuEntity.getStock() - wareSkuEntity.getStockLocked() > 0));
-                    goods.setSales(wareSkuEntities.stream().map(WareSkuEntity::getSales).reduce(((a, b) -> a + b)).get());
-                }
+                    // 库存相关信息
+                    ResponseVo<List<WareSkuEntity>> wareSkusResponseVo = this.wmsClient.queryWareSkuBySkuId(skuEntity.getId());
+                    List<WareSkuEntity> wareSkuEntities = wareSkusResponseVo.getData();
+                    if (!CollectionUtils.isEmpty(wareSkuEntities)) {
+                        goods.setStore(wareSkuEntities.stream().anyMatch(wareSkuEntity -> wareSkuEntity.getStock() - wareSkuEntity.getStockLocked() > 0));
+                        goods.setSales(wareSkuEntities.stream().map(WareSkuEntity::getSales).reduce(((a, b) -> a + b)).get());
+                    }
 
-                // 检索属性和值
-                List<SearchAttrValueVo> attrValueVos = new ArrayList<>();
-                // skuAttrValueEntity
-                ResponseVo<List<SkuAttrValueEntity>> skuAttrsResponseVo = this.pmsClient.querySearchSkuAttrValuesByCidAndSkuId(skuEntity.getCatagoryId(), spuId);
-                List<SkuAttrValueEntity> searchSkuAttrValueEntities = skuAttrsResponseVo.getData();
-                if (!CollectionUtils.isEmpty(searchSkuAttrValueEntities)) {
-                    attrValueVos.addAll(searchSkuAttrValueEntities.stream().map(skuAttrValueEntity -> {
-                        SearchAttrValueVo searchAttrValueVo = new SearchAttrValueVo();
-                        BeanUtils.copyProperties(skuAttrValueEntity, searchAttrValueVo);
-                        return searchAttrValueVo;
-                    }).collect(Collectors.toList()));
-                }
-                // spuAttrValueEntity
-                ResponseVo<List<SpuAttrValueEntity>> spuAttrsResponseVo = this.pmsClient.querySearchSpuAttrValuesByCidAndSpuId(skuEntity.getCatagoryId(), spuId);
-                List<SpuAttrValueEntity> searchSpuAttrValueEntities = spuAttrsResponseVo.getData();
-                if (!CollectionUtils.isEmpty(searchSpuAttrValueEntities)) {
-                    attrValueVos.addAll(searchSpuAttrValueEntities.stream().map(spuAttrValueEntity -> {
-                        SearchAttrValueVo searchAttrValueVo = new SearchAttrValueVo();
-                        BeanUtils.copyProperties(spuAttrValueEntity, searchAttrValueVo);
-                        return searchAttrValueVo;
-                    }).collect(Collectors.toList()));
-                }
-                goods.setSearchAttrs(attrValueVos);
+                    // 检索属性和值
+                    List<SearchAttrValueVo> attrValueVos = new ArrayList<>();
+                    // skuAttrValueEntity
+                    ResponseVo<List<SkuAttrValueEntity>> skuAttrsResponseVo = this.pmsClient.querySearchSkuAttrValuesByCidAndSkuId(skuEntity.getCatagoryId(), spuId);
+                    List<SkuAttrValueEntity> searchSkuAttrValueEntities = skuAttrsResponseVo.getData();
+                    if (!CollectionUtils.isEmpty(searchSkuAttrValueEntities)) {
+                        attrValueVos.addAll(searchSkuAttrValueEntities.stream().map(skuAttrValueEntity -> {
+                            SearchAttrValueVo searchAttrValueVo = new SearchAttrValueVo();
+                            BeanUtils.copyProperties(skuAttrValueEntity, searchAttrValueVo);
+                            return searchAttrValueVo;
+                        }).collect(Collectors.toList()));
+                    }
+                    // spuAttrValueEntity
+                    ResponseVo<List<SpuAttrValueEntity>> spuAttrsResponseVo = this.pmsClient.querySearchSpuAttrValuesByCidAndSpuId(skuEntity.getCatagoryId(), spuId);
+                    List<SpuAttrValueEntity> searchSpuAttrValueEntities = spuAttrsResponseVo.getData();
+                    if (!CollectionUtils.isEmpty(searchSpuAttrValueEntities)) {
+                        attrValueVos.addAll(searchSpuAttrValueEntities.stream().map(spuAttrValueEntity -> {
+                            SearchAttrValueVo searchAttrValueVo = new SearchAttrValueVo();
+                            BeanUtils.copyProperties(spuAttrValueEntity, searchAttrValueVo);
+                            return searchAttrValueVo;
+                        }).collect(Collectors.toList()));
+                    }
+                    goods.setSearchAttrs(attrValueVos);
 
-                return goods;
-            }).collect(Collectors.toList());
+                    return goods;
+                }).collect(Collectors.toList());
 
-            // 批量导入到es
-            this.repository.saveAll(goodsList);
+                // 批量导入到es
+                this.repository.saveAll(goodsList);
+
+                // 消费者确认
+                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (message.getMessageProperties().getRedelivered()){
+                channel.basicReject(message.getMessageProperties().getDeliveryTag(), false);
+            } else {
+                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, true);
+            }
         }
     }
 

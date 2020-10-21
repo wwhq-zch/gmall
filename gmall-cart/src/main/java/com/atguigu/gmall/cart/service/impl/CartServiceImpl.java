@@ -7,6 +7,7 @@ import com.atguigu.gmall.cart.feign.GmallWmsClient;
 import com.atguigu.gmall.cart.interceptor.LoginInterceptor;
 import com.atguigu.gmall.cart.mapper.CartMapper;
 import com.atguigu.gmall.cart.pojo.Cart;
+import com.atguigu.gmall.cart.pojo.CartStatus;
 import com.atguigu.gmall.cart.pojo.UserInfo;
 import com.atguigu.gmall.cart.service.CartService;
 import com.atguigu.gmall.common.bean.ResponseVo;
@@ -44,9 +45,6 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
-
-    @Autowired
-    private CartMapper cartMapper;
 
     @Autowired
     private CartAsyncService cartAsyncService;
@@ -222,6 +220,26 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    public void updateStatus(CartStatus cartStatus) {
+        String userId = this.getUserId();
+        String key = KEY_PREFIX + userId;
+
+        // 获取该用户的所有购物车
+        BoundHashOperations<String, Object, Object> hashOps = this.redisTemplate.boundHashOps(key);
+        // 判断该用户的购物车中是否包含该条信息
+        if (hashOps.hasKey(cartStatus.getSkuId().toString())) {
+            // 查询该条购物车信息 更新到mysql及redis
+            String cartJson = hashOps.get(cartStatus.getSkuId().toString()).toString();
+            Cart cart = JSON.parseObject(cartJson, Cart.class);
+            cart.setCheck(cartStatus.getCheck());
+            // 更新到mysql及redis 异步更新mysql数据库数据
+            this.cartAsyncService.updateCartByUserIdAndSkuId(userId, cart);
+            hashOps.put(cartStatus.getSkuId().toString(), JSON.toJSONString(cart));
+        }
+
+    }
+
+    @Override
     public void updateNum(Cart cart) {
         String userId = this.getUserId();
         String key = KEY_PREFIX + userId;
@@ -254,6 +272,20 @@ public class CartServiceImpl implements CartService {
             this.cartAsyncService.deleteCartByUserIdAndSkuId(userId, skuId);
             hashOps.delete(skuId.toString());
         }
+    }
+
+    @Override
+    public List<Cart> queryCheckedCarts(Long userId) {
+        String key = KEY_PREFIX + userId;
+        BoundHashOperations<String, Object, Object> hashOps = this.redisTemplate.boundHashOps(key);
+        List<Object> cartJsons = hashOps.values();
+        if (!CollectionUtils.isEmpty(cartJsons)){
+            return cartJsons.stream()
+                    .map(cartJson -> JSON.parseObject(cartJson.toString(), Cart.class))
+                    .filter(cart -> cart.getCheck())
+                    .collect(Collectors.toList());
+        }
+        return null;
     }
 
     /**

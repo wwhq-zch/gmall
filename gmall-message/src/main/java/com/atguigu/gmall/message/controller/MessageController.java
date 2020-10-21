@@ -6,4 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(description = "短信服务 管理")
 @RestController
 public class MessageController {
+
+    // TODO 短信功能，发送验证码
 }

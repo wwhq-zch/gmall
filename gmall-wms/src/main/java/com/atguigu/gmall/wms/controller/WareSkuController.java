@@ -2,6 +2,7 @@ package com.atguigu.gmall.wms.controller;
 
 import java.util.List;
 
+import com.atguigu.gmall.wms.vo.SkuLockVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -34,6 +35,13 @@ public class WareSkuController {
 
     @Autowired
     private WareSkuService wareSkuService;
+
+    @ApiOperation("锁定库存")
+    @PostMapping("check/lock") // 必须是post请求
+    public ResponseVo<List<SkuLockVo>> checkAndLock(@RequestBody List<SkuLockVo> skuLockVos){
+        List<SkuLockVo> skuLockVoList = this.wareSkuService.checkAndLock(skuLockVos);
+        return ResponseVo.ok(skuLockVoList);
+    }
 
     @ApiOperation("根据skuId查询库存信息")
     @GetMapping("sku/{skuId}")

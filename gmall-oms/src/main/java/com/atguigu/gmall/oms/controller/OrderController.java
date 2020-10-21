@@ -2,16 +2,11 @@ package com.atguigu.gmall.oms.controller;
 
 import java.util.List;
 
+import com.atguigu.gmall.oms.vo.OrderSubmitVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gmall.oms.entity.OrderEntity;
 import com.atguigu.gmall.oms.service.OrderService;
@@ -33,6 +28,13 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    @ApiOperation("根据验库后订单信息，保存订单")
+    @PostMapping("{userId}")
+    public ResponseVo<OrderEntity> saveOrder(@RequestBody OrderSubmitVo orderSubmitVo, @PathVariable("userId") Long userId){
+        OrderEntity orderEntity = this.orderService.saveOrder(orderSubmitVo, userId);
+        return ResponseVo.ok(orderEntity);
+    }
 
     /**
      * 列表

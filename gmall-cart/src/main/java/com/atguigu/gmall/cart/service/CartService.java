@@ -1,6 +1,7 @@
 package com.atguigu.gmall.cart.service;
 
 import com.atguigu.gmall.cart.pojo.Cart;
+import com.atguigu.gmall.cart.pojo.CartStatus;
 import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.List;
@@ -20,4 +21,9 @@ public interface CartService {
     void updateNum(Cart cart);
 
     void deleteCart(Long skuId);
+
+    List<Cart> queryCheckedCarts(Long userId);
+
+    void updateStatus(CartStatus cartStatus);
+
 }

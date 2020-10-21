@@ -29,7 +29,7 @@ spring:
     username: admin
     password: 123456
     listener:
-      type: simple # simple-listener容器使用一个额外线程处理消息  direct-listener（监听器）容器直接使用consumer线程
+      # type: simple # simple-listener容器使用一个额外线程处理消息  direct-listener（监听器）容器直接使用consumer线程
       simple:
         acknowledge-mode: manual # manual-手动  auto-自动（无异常直接确认，有异常无限重试） none-不重试
         prefetch: 1 # 能者多劳
