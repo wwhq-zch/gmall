@@ -22,6 +22,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+/**
+ * 异步编排--优化同步请求延时高的问题
+ */
 @Service
 public class ItemServiceImpl implements ItemService {
 
