@@ -83,7 +83,7 @@ public class AuthGatewayFilterFactory extends AbstractGatewayFilterFactory<AuthG
                 // 4.解析jwt，有异常直接拦截
                 Map<String, Object> map = JwtUtils.getInfoFromToken(token, jwtProperties.getPublicKey());
 
-                // 5.判断ip
+                // 5.判断ip，防止盗用
                 String ip = map.get("ip").toString();
                 String curIp = IpUtil.getIpAddressAtGateway(request);
                 if (!StringUtils.equals(ip, curIp)) {

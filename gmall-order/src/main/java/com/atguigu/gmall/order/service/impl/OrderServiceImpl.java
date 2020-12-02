@@ -2,7 +2,7 @@ package com.atguigu.gmall.order.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.cart.pojo.Cart;
-import com.atguigu.gmall.cart.pojo.UserInfo;
+import com.atguigu.gmall.common.bean.UserInfo;
 import com.atguigu.gmall.common.bean.ResponseVo;
 import com.atguigu.gmall.common.handler.GmallException;
 import com.atguigu.gmall.oms.entity.OrderEntity;

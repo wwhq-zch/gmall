@@ -31,6 +31,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, OrderEntity> impl
     @Autowired
     private OrderItemMapper orderItemMapper;
     @Autowired
+    private OrderMapper orderMapper;
+    @Autowired
     private RabbitTemplate rabbitTemplate;
 
     @Override
@@ -84,5 +86,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, OrderEntity> impl
         this.rabbitTemplate.convertAndSend("ORDER_EXCHANGE", "order.ttl", orderSubmitVo.getOrderToken());
 
         return orderEntity;
+    }
+
+    @Override
+    public OrderEntity queryOrderByToken(String orderToken) {
+        return this.orderMapper.selectOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderToken));
     }
 }

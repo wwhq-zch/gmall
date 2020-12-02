@@ -7,13 +7,16 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * 购物车信息
+ */
 @Data
-@TableName("cart_info")
+@TableName("cart_info") // 映射数据库表
 public class Cart {
 
     @TableId
     private Long id;
-    @TableField("user_id")
+    @TableField("user_id") // 与数据库字段名不一致时，声明字段映射
     private String userId;
     @TableField("sku_id")
     private Long skuId;

@@ -5,10 +5,9 @@ import com.atguigu.gmall.cart.feign.GmallPmsClient;
 import com.atguigu.gmall.cart.feign.GmallSmsClient;
 import com.atguigu.gmall.cart.feign.GmallWmsClient;
 import com.atguigu.gmall.cart.interceptor.LoginInterceptor;
-import com.atguigu.gmall.cart.mapper.CartMapper;
 import com.atguigu.gmall.cart.pojo.Cart;
 import com.atguigu.gmall.cart.pojo.CartStatus;
-import com.atguigu.gmall.cart.pojo.UserInfo;
+import com.atguigu.gmall.common.bean.UserInfo;
 import com.atguigu.gmall.cart.service.CartService;
 import com.atguigu.gmall.common.bean.ResponseVo;
 import com.atguigu.gmall.common.handler.GmallException;
@@ -16,20 +15,15 @@ import com.atguigu.gmall.pms.entity.SkuAttrValueEntity;
 import com.atguigu.gmall.pms.entity.SkuEntity;
 import com.atguigu.gmall.sms.vo.ItemSaleVo;
 import com.atguigu.gmall.wms.entity.WareSkuEntity;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.google.common.util.concurrent.FutureCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.concurrent.ListenableFuture;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -76,6 +70,7 @@ public class CartServiceImpl implements CartService {
         } else {
             // 5.不包含，给该用户新增购物车记录 skuId count
             cart.setUserId(userId);
+            cart.setCount(count);
 
             // 根据skuId查询sku
             ResponseVo<SkuEntity> skuEntityResponseVo = this.pmsClient.querySkuById(cart.getSkuId());
@@ -198,7 +193,7 @@ public class CartServiceImpl implements CartService {
                     cart.setUserId(userId.toString()); // 用userId覆盖掉userKey
                     this.cartAsyncService.saveCart(userId.toString(), cart);
                 }
-                loginHashOps.put(cart.getSkuId().toString(), JSON.toJSONString(cart));
+                loginHashOps.put(cart.getSkuId().toString(), JSON.toJSONString(cart)); // 添加到缓存中
             });
             // 合并完未登录的购物车之后，要删除未登录的购物车
             this.cartAsyncService.deleteCartByUserId(userKey);

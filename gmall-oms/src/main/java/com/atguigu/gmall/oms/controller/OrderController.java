@@ -29,6 +29,13 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    @ApiOperation("根据订单编号查询订单")
+    @GetMapping("pay/{orderToken}}")
+    public ResponseVo<OrderEntity> queryOrderByToken(@PathVariable("orderToken") String orderToken){
+        OrderEntity orderEntity = this.orderService.queryOrderByToken(orderToken);
+        return ResponseVo.ok(orderEntity);
+    }
+
     @ApiOperation("根据验库后订单信息，保存订单")
     @PostMapping("{userId}")
     public ResponseVo<OrderEntity> saveOrder(@RequestBody OrderSubmitVo orderSubmitVo, @PathVariable("userId") Long userId){

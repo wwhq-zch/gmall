@@ -24,6 +24,10 @@ public class DistributedLock {
      */
     public Boolean tryLock(String lockName, String uuid, Long expireTime){
 
+        /*
+         * 给锁添加过期时间
+         * 使用lua脚本保证原子性
+         */
         String script = "if(redis.call('exists', KEYS[1])==0 or redis.call('hexists', KEYS[1], ARGV[1])==1)" +
                 "then " +
                 "   redis.call('hincrby', KEYS[1], ARGV[1], 1) " +
@@ -72,7 +76,7 @@ public class DistributedLock {
     }
 
     /**
-     * 自动续期
+     * 看门狗线程，自动续期
      * @param lockName
      * @param uuid
      * @param expireTime

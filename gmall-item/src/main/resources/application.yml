@@ -25,7 +25,7 @@ feign:
   sentinel:
     enabled: true
 threadPool:
-  coreSize: 100
-  maxSize: 500
+  coreSize: 5
+  maxSize: 10
   keepAlive: 60
   blockingSize: 5000

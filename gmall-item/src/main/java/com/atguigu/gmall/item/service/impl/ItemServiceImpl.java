@@ -146,6 +146,7 @@ public class ItemServiceImpl implements ItemService {
             itemVo.setGroups(itemGroupVos);
         }, threadPoolExecutor);
 
+        // 执行异步编排任务
         CompletableFuture.allOf(cateCompletableFuture, brandCompletableFuture, spuCompletableFuture,
                 imageCompletableFuture, salesCompletableFuture, wareCompletableFuture, saleAttrsCompletableFuture,
                 saleAttrCompletableFuture, mappingCompletableFuture, descCompletableFuture, groupCompletableFuture).join();

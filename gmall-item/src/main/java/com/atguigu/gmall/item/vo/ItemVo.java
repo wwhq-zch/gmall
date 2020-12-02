@@ -11,6 +11,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 商品详情页
+ */
 @Data
 public class ItemVo {
 

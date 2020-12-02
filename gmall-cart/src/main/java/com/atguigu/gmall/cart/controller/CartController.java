@@ -3,7 +3,7 @@ package com.atguigu.gmall.cart.controller;
 import com.atguigu.gmall.cart.interceptor.LoginInterceptor;
 import com.atguigu.gmall.cart.pojo.Cart;
 import com.atguigu.gmall.cart.pojo.CartStatus;
-import com.atguigu.gmall.cart.pojo.UserInfo;
+import com.atguigu.gmall.common.bean.UserInfo;
 import com.atguigu.gmall.cart.service.CartService;
 import com.atguigu.gmall.common.bean.ResponseVo;
 import com.atguigu.gmall.common.handler.GmallException;
@@ -12,13 +12,10 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.concurrent.FailureCallback;
-import org.springframework.util.concurrent.SuccessCallback;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 @Api(description = "购物车 系统")
 @Controller

@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * openFeign最佳实践，提供一个接口工程，远程调用的服务和被调用服务都引入接口工程
+ */
 public interface GmallPmsApi {
     @PostMapping("pms/spu/json")
     public ResponseVo<List<SpuEntity>> querySpuByPageJson(@RequestBody PageParamVo paramVo);

@@ -29,6 +29,7 @@ public class OrderController {
         return "trade";
     }
 
+    @ApiOperation("订单提交")
     @PostMapping("submit")
     @ResponseBody
     public ResponseVo<Object> submit(@RequestBody OrderSubmitVo submitVo){

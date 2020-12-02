@@ -54,8 +54,8 @@ public class CompletableFutureDemo {
 
         List<CompletableFuture> futures = Arrays.asList(
                 CompletableFuture.completedFuture("hello"),
-                CompletableFuture.completedFuture(" world!"),
-                CompletableFuture.completedFuture(" hello"),
+                CompletableFuture.completedFuture("world!"),
+                CompletableFuture.completedFuture("hello2"),
                 CompletableFuture.completedFuture("java!"));
         final CompletableFuture<Void> allCompleted = CompletableFuture.allOf(futures.toArray(new CompletableFuture[]{}));
         allCompleted.thenRun(() -> {
